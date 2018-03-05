@@ -1,13 +1,18 @@
 # amex-cardpool-arbitrage
+
 AmEx rewards offers sold to Cardpool at the best rates
 
-## 1. Pull AmEx data off of https://global.americanexpress.com/rewards/gift-cards by running this in the console (must be logged in to see offers)
+## 1. Navigate to https://global.americanexpress.com/rewards/gift-cards while logged in
+
+## 2. Pop Developer Console and paste in latest jQuery source
+
+## 3. Extract AmEx data by running this script (save to amex.json):
 
 ```
-var amexData = $('.GiftCard__brandName___3-T2Y').toArray().map(function(selector) {
+JSON.stringify($('[class*=GiftCard__brandName__]').toArray().map(function(selector) {
   $(selector).trigger('click');
 
-  var brandName = $('.Detail__brand___K-5p6').text();
+  var brandName = $('[class*=Detail__brand__]').text();
   var dollarAmount = $('label[for="denomination-0"] span:nth(1)').text().trim().trimLeft();
   var pointsAmount;
 
@@ -33,16 +38,16 @@ var amexData = $('.GiftCard__brandName___3-T2Y').toArray().map(function(selector
     pointsPerDollar: pointsAmount / dollarAmount,
     dollarPerPoint: dollarAmount / pointsAmount
   };
-});
+}));
 ```
 
-## 2. Pull CardPool inventory data
+## 4. Pull CardPool inventory data
 
 ```
-$ curl 'https://www.cardpool.com/api/inventories/acquireProductLineSummaries' 
+$ curl 'https://www.cardpool.com/api/inventories/acquireProductLineSummaries' -o cardpool.json
 ```
 
-## 3. Map results looking for best current rates
+## 5. Map results looking for best current rates
 
 ```
 $ node arbitrage.js

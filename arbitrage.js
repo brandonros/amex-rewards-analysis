@@ -75,6 +75,11 @@ var cardpoolAmexMap = {
 var mappedCardpoolAmexData = Object.keys(cardpoolAmexMap).filter(function(brandName) {
   var slug = cardpoolAmexMap[brandName];
 
+  if (!slug) {
+    console.error('Missing slug', brandName);
+    return false;
+  }
+
   var amexEntry = amexData.find(function(element) {
     return element.brandName === brandName;
   });
@@ -83,8 +88,13 @@ var mappedCardpoolAmexData = Object.keys(cardpoolAmexMap).filter(function(brandN
     return element.slug === slug;
   });
 
-  if (!amexEntry || !cardpoolEntry) {
-    console.error('Missing Amex/Cardpool data', brandName);
+  if (!cardpoolEntry) {
+    console.error('Missing Cardpool data', brandName);
+    return false;
+  }
+
+  if (!amexEntry) {
+    console.error('Missing Amex data', brandName);
     return false;
   }
 
@@ -104,7 +114,8 @@ var mappedCardpoolAmexData = Object.keys(cardpoolAmexMap).filter(function(brandN
   return {
     amexEntry: amexEntry,
     cardpoolEntry: cardpoolEntry,
-    dollarValue: (pointsBalance / amexEntry.pointsPerDollar) * (1 - cardpoolEntry.acquireCashDiscount)
+    dollarValue: (pointsBalance / amexEntry.pointsPerDollar) * (1 - cardpoolEntry.acquireCashDiscount),
+    amazonValue: (pointsBalance / amexEntry.pointsPerDollar) * (1 - cardpoolEntry.acquireAmazonDiscount)
   };
 });
 
