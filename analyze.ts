@@ -149,11 +149,42 @@ const calculateBangForBucks = (parsedBrand: Brand): BangForBuck[] => {
     return results;
 };
 
-const brands = JSON.parse(fs.readFileSync('./brands.json', 'utf8')) as Brand[] // quite a disaster to get by hand from a very weird format from window.__INITIAL_STATE__ from https://global.americanexpress.com/rewards/gift-cards
+function parseArrayToMap(array: any): any {
+    // Base case: if the array does not start with '~#iM', return it as is.
+    if (array[0] !== '~#iM') {
+      return array;
+    }
 
+    // Recursive case: parse the array into an object.
+    const obj: any = {};
+    const pairs = array[1]; // The second element is an array of key-value pairs.
+    for (let i = 0; i < pairs.length; i += 2) {
+      const key = pairs[i];
+      const value = pairs[i + 1];
+      obj[key] = Array.isArray(value) ? parseArrayToMap(value) : value;
+    }
+    return obj;
+}
+
+const input = fs.readFileSync('./input.txt', 'utf8')
+const pattern = /^window\.__INITIAL_STATE__ = (".*");$/
+const matches = pattern.exec(input)
+assert(matches !== null)
+const match = matches[1]
+const parsedMatch = parseArrayToMap(JSON.parse(JSON.parse(match)))
+const graphql = parsedMatch.modules['axp-loyalty-root'].graphql
+const { endpoints } = graphql
+const { readGiftCardsCatalog } = endpoints
+const { queries } = readGiftCardsCatalog
+const queryId = '4cdec4e7b745d9b050294d03d06b60bd0a22e68b'
+const query = queries[queryId]
+const { variables, typenames } = query
+const variablesId = 'fdd6bd26f7a284baade6b1adbebd248f60d20ede'
+const { status, data, error } = variables[variablesId]
+const brands = data[2][0][8] // TODO: this is so awful
 let results: BangForBuck[] = []
 for (const brand of brands) {
-    const parsedBrand: Brand = parseCustomJSON(brand)
+    const parsedBrand: Brand = parseAmexJson(brand)
     results = results.concat(calculateBangForBucks(parsedBrand))
 }
 results.sort((a, b) => b.dollarValuePerPoint - a.dollarValuePerPoint)
